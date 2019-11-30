@@ -1,0 +1,30 @@
+dist: xenial
+
+language: python
+
+python:
+  - "3.7"
+
+install:
+  - pip install docker pytest
+
+services:
+  - docker
+
+env:
+  - NAME='latest' BUILD_PATH='python3.7' TEST_STR1='Hello world! From Uvicorn with Gunicorn. Using Python 3.7' TEST_STR2='Test app. From Uvicorn with Gunicorn. Using Python 3.7'
+  - NAME='python3.7' BUILD_PATH='python3.7' TEST_STR1='Hello world! From Uvicorn with Gunicorn. Using Python 3.7' TEST_STR2='Test app. From Uvicorn with Gunicorn. Using Python 3.7'
+
+script:
+  - bash scripts/test.sh
+
+jobs:
+    include:
+      - script: bash scripts/test.sh
+      - stage: deploy
+        script: skip
+        deploy:
+          provider: script
+          script: bash scripts/build-push.sh
+          on:
+            branch: master
