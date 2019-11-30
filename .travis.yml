@@ -6,7 +6,8 @@ python:
   - "3.7"
 
 install:
-  - pip install docker pytest
+  - pip install pipenv
+  - pipenv install docker pytest
 
 services:
   - docker
