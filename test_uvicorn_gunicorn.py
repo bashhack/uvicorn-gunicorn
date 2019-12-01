@@ -45,7 +45,6 @@ def verify_logs(container, response_text, host):
         "Running inside /app/prestart.sh, you could add migrations to this file" in logs
     )
 
-    # Will need to exclude for 127.0.0.1 case...
     if host != "127.0.0.1":
         response = requests.get("http://127.0.0.1:8000")
         assert response.text == response_text
