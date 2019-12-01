@@ -1,11 +1,13 @@
 import os
 import time
+from pathlib import PurePath, Path
 
 import docker
 import pytest
 import requests
 
-from ..utils import (
+from test_utils import (
+    IMAGE_NAME,
     CONTAINER_NAME,
     get_config,
     get_logs,
@@ -103,6 +105,33 @@ def test_configurations(configuration, verify_config_func, host):
     remove_previous_container(client)
     container = client.containers.run(
         image, name=CONTAINER_NAME, detach=True, **configuration
+    )
+    time.sleep(sleep_time)
+    verify_config_func(container)
+    verify_logs(container, response_text, host)
+    container.stop()
+
+    # Test that everything works after restarting too
+    container.start()
+    time.sleep(sleep_time)
+    verify_config_func(container)
+    verify_logs(container, response_text, host)
+    container.stop()
+    container.remove()
+
+
+@pytest.mark.parametrize('configuration,verify_config_func,host', [(default_configuration, verify_default_config, None)])
+def test_app(configuration, verify_config_func, host):
+    name = os.getenv("NAME")
+    dockerfile = f"{name}.dockerfile"
+    response_text = os.getenv("TEST_STR2")
+    sleep_time = int(os.getenv("SLEEP_TIME", 1))
+    remove_previous_container(client)
+    test_path: PurePath = Path(__file__)
+    path = test_path.parent / "example_app"
+    client.images.build(path=str(path), dockerfile=dockerfile, tag=IMAGE_NAME)
+    container = client.containers.run(
+        IMAGE_NAME, name=CONTAINER_NAME, ports={"80": "8000"}, detach=True
     )
     time.sleep(sleep_time)
     verify_config_func(container)
